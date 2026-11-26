@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>60s Voice-Bridge • Đối Thoại Giọng Nói Liên Thế Hệ</title>
+  <!-- Tải Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tải phông chữ Inter từ Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Thiết lập biến màu động cho từng tuần */
+    .theme-week-1 {
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --accent-border: #99f6e4;
+      --accent-hover: #115e59;
+    }
+
+    .theme-week-2 {
+      --accent: #b45309;
+      --accent-soft: #fef3c7;
+      --accent-border: #fde68a;
+      --accent-hover: #92400e;
+    }
+
+    .theme-week-3 {
+      --accent: #6d28d9;
+      --accent-soft: #ede9fe;
+      --accent-border: #ddd6fe;
+      --accent-hover: #5b21b6;
+    }
+
+    .theme-week-4 {
+      --accent: #be123c;
+      --accent-soft: #ffe4e6;
+      --accent-border: #fecdd3;
+      --accent-hover: #9f1239;
+    }
+
+    /* Thẻ bài tỉ lệ 4:5 */
+    .voice-card {
+      aspect-ratio: 4 / 5;
+      border-top: 8px solid var(--accent);
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease;
+    }
+
+    .badge-accent {
+      color: var(--accent);
+      background-color: var(--accent-soft);
+    }
+
+    .text-accent {
+      color: var(--accent);
+    }
+
+    .bg-accent {
+      background-color: var(--accent);
+    }
+
+    .bg-accent:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* Hiệu ứng chuyển thẻ mượt mà */
+    @keyframes cardFadeSlide {
+      from {
+        opacity: 0.4;
+        transform: translateY(8px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-animate {
+      animation: cardFadeSlide 0.28s ease-out forwards;
+    }
+
+    /* Hiệu ứng sóng âm trực quan khi đang ghi âm */
+    @keyframes soundWaveBar {
+      0%, 100% {
+        transform: scaleY(0.35);
+      }
+      50% {
+        transform: scaleY(1);
+      }
+    }
+
+    .wave-bar {
+      animation: soundWaveBar 0.75s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .wave-bar:nth-child(2) { animation-delay: 0.12s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.24s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.36s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.48s; }
+    .wave-bar:nth-child(6) { animation-delay: 0.18s; }
+    .wave-bar:nth-child(7) { animation-delay: 0.30s; }
+
+    /* Nhịp đập vòng tròn nút ghi âm */
+    @keyframes pulseRing {
+      0% {
+        transform: scale(0.95);
+        opacity: 0.75;
+      }
+      100% {
+        transform: scale(1.45);
+        opacity: 0;
+      }
+    }
+
+    .record-pulse-ring {
+      animation: pulseRing 1.4s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+
+    /* Định dạng riêng khi in ấn (Ctrl + P) ở chế độ Xem tất cả */
+    @media print {
+      body {
+        background: #ffffff !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+      }
+      .voice-card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-top: 8px solid var(--accent) !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-slate-200">
+
+  <!-- Thanh tiêu đề & Điều khiển chế độ xem -->
+  <header class="no-print sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div id="headerLogoIcon" class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm transition-colors duration-300" style="background-color: #0f766e;">
+          <!-- Biểu tượng sóng âm -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">60s Voice-Bridge</h1>
+          <p class="text-xs text-slate-500">Cầu nối giọng nói 60 giây • Bố mẹ &amp; Con cái</p>
+        </div>
+      </div>
+
+      <!-- Chuyển đổi chế độ: Phòng thu Voice / Xem tất cả 30 thẻ -->
+      <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+        <button id="btnModeSingle" type="button" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          <span>Phòng thu Voice</span>
+        </button>
+        <button id="btnModeGrid" type="button" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span>30 Thẻ gợi ý</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Thanh chọn Mã cặp, Vai trò người nói & Tiến độ 30 ngày -->
+    <div class="bg-slate-50/90 border-t border-slate-200/70">
+      <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <!-- Nhập Mã cặp & Chọn Vai trò -->
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-xs">
+            <label for="pairCodeInput" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Mã cặp:</label>
+            <input
+              id="pairCodeInput"
+              type="text"
+              maxlength="12"
+              value="VB-01"
+              placeholder="VB-01"
+              class="w-16 sm:w-20 text-xs sm:text-sm font-extrabold text-slate-800 uppercase focus:outline-none bg-transparent"
+            />
+          </div>
+
+          <!-- Chọn vai trò: Con hoặc Bố / Mẹ -->
+          <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-xs" role="group" aria-label="Chọn vai trò người đang dùng">
+            <button id="roleBtnChild" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-teal-600 text-white shadow-xs flex items-center gap-1.5">
+              <span>🎒</span>
+              <span>Con</span>
+            </button>
+            <button id="roleBtnParent" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+              <span>🏡</span>
+              <span>Bố / Mẹ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh tiến độ hoàn thành 30 ngày -->
+        <div class="flex items-center gap-3 flex-1 sm:flex-initial min-w-[210px] max-w-xs">
+          <div class="flex-1">
+            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
+              <span>Tiến độ kết nối (cặp <strong id="pairCodeDisplay" class="text-slate-900">VB-01</strong>)</span>
+              <span id="completedDaysCount" class="font-extrabold text-teal-700">0/30 ngày</span>
+            </div>
+            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div id="progressBarFill" class="h-full bg-teal-600 rounded-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Nội dung chính -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:py-7">
+
+    <!-- Bộ lọc nhanh theo 4 tuần -->
+    <section class="no-print mb-5">
+      <div class="flex flex-wrap items-center justify-center gap-2" id="weekFilterBar">
+        <button data-week-filter="all" class="week-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all bg-slate-900 text-white border-slate-900 shadow-sm">
+          Tất cả (30 ngày)
+        </button>
+        <button data-week-filter="1" class="week-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all bg-white text-slate-700 border-slate-200 hover:border-teal-600 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-[#0f766e]"></span>
+          Tuần 1: Nhịp sống
+        </button>
+        <button data-week-filter="2" class="week-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all bg-white text-slate-700 border-slate-200 hover:border-amber-700 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-[#b45309]"></span>
+          Tuần 2: Ký ức
+        </button>
+        <button data-week-filter="3" class="week-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all bg-white text-slate-700 border-slate-200 hover:border-violet-700 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-[#6d28d9]"></span>
+          Tuần 3: Cảm xúc
+        </button>
+        <button data-week-filter="4" class="week-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all bg-white text-slate-700 border-slate-200 hover:border-rose-700 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-[#be123c]"></span>
+          Tuần 4: Biết ơn
+        </button>
+      </div>
+    </section>
+
+    <!-- CHẾ ĐỘ 1: PHÒNG THU VOICE & THẺ GỢI MỞ (SINGLE VIEW) -->
+    <section id="singleViewSection" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+      <!-- Cột trái (5 cột): Thẻ gợi mở đối thoại + Điều hướng ngày -->
+      <div class="lg:col-span-5 flex flex-col items-center">
+        <!-- Vùng nhận thao tác vuốt trên điện thoại -->
+        <div id="swipeArea" class="w-full max-w-[380px] select-none touch-pan-y">
+          <article id="activeCard" class="voice-card theme-week-1 w-full bg-white rounded-[26px] p-6 sm:p-7 flex flex-col justify-between shadow-xl shadow-slate-200/80 border border-slate-100">
+            <!-- Phần đầu thẻ -->
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span id="cardDayBadge" class="badge-accent text-xs font-extrabold tracking-wide px-3.5 py-1.5 rounded-full">
+                  NGÀY 01 / 30
+                </span>
+                <span id="cardStatusPill" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">
+                  Chưa có lời thoại
+                </span>
+              </div>
+              <div id="cardWeekLabel" class="mt-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                Tuần 1 • Nhịp sống &amp; Giác quan
+              </div>
+            </div>
+
+            <!-- Phần nội dung chính của thẻ (Gợi ý để nói) -->
+            <div class="my-auto py-4">
+              <div class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                </svg>
+                <span>Gợi ý chủ đề để nói</span>
+              </div>
+              <p id="cardQuestion" class="text-lg sm:text-[20px] leading-[1.45] font-bold text-slate-800">
+                Hôm nay ở chỗ con và bố mẹ thời tiết thế nào? Hãy thu âm một tiếng động xung quanh lúc này.
+              </p>
+              <p id="cardHint" class="mt-3 text-xs sm:text-[13px] leading-relaxed text-slate-500">
+                Không cần kể chuyện dài — chỉ một chi tiết nhỏ đủ để con và bố mẹ hình dung không gian của nhau.
+              </p>
+            </div>
+
+            <!-- Phần chân thẻ: Quy tắc 60s -->
+            <div class="border-t border-dashed border-slate-200 pt-3.5 text-[11.5px] leading-relaxed text-slate-500">
+              <strong class="text-accent font-bold">Quy tắc 60s:</strong> Bấm mic nói tự nhiên tối đa 60 giây • Lắng nghe không phán xét • Cả hai cùng hồi đáp.
+            </div>
+          </article>
+        </div>
+
+        <!-- Thanh nút điều hướng Ngày trước / Ngày sau -->
+        <div class="w-full max-w-[380px] mt-4 flex items-center justify-between gap-2.5">
+          <button id="btnPrev" type="button" class="flex-1 py-3 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            <span>Ngày trước</span>
+          </button>
+
+          <button id="btnNext" type="button" class="flex-1 py-3 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-xs">
+            <span>Ngày sau</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Bảng chọn nhanh 30 ngày thu gọn -->
+        <div class="w-full max-w-[380px] mt-4 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-bold text-slate-700">Chọn nhanh ngày thẻ (chấm xanh = đã có voice)</span>
+            <span id="currentProgressText" class="text-[11px] font-bold text-slate-500">1 / 30</span>
+          </div>
+          <div id="daySelectorGrid" class="grid grid-cols-6 gap-1.5">
+            <!-- Render bằng JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột phải (7 cột): Phòng thu Voice 60s & Hộp thoại âm thanh Bố/Mẹ - Con -->
+      <div class="lg:col-span-7 flex flex-col gap-5">
+
+        <!-- KHỐI 1: PHÒNG THU VOICE 60 GIÂY -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <span id="studioRoleBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-teal-50 text-teal-700 border border-teal-200">
+                🎒 Đang nói với vai trò: CON
+              </span>
+            </div>
+            <span class="text-xs font-medium text-slate-400">Tối đa 60 giây / lượt nói</span>
+          </div>
+
+          <!-- Khu vực tương tác ghi âm (3 trạng thái: Sẵn sàng / Đang ghi / Nghe lại & Gửi) -->
+          <div class="pt-5">
+
+            <!-- Trạng thái 1: Sẵn sàng ghi âm -->
+            <div id="recorderIdleState" class="flex flex-col items-center text-center py-2">
+              <div class="relative flex items-center justify-center mb-3">
+                <button
+                  id="btnStartRecord"
+                  type="button"
+                  class="relative z-10 w-20 h-20 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white flex flex-col items-center justify-center shadow-lg shadow-rose-200 transition-all cursor-pointer"
+                  aria-label="Bắt đầu ghi âm 60 giây"
+                >
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                  </svg>
+                </button>
+              </div>
+              <p class="text-sm font-bold text-slate-800">Bấm micro để bắt đầu nói (60s)</p>
+              <p id="recorderSubHint" class="text-xs text-slate-500 mt-1 max-w-md">
+                Nhìn câu hỏi gợi ý bên cạnh và chia sẻ suy nghĩ của con bằng giọng nói tự nhiên nhất.
+              </p>
+
+              <!-- Cảnh báo & Nút tạo bản thu mẫu nếu trình duyệt chặn micro -->
+              <div id="micFallbackBanner" class="hidden mt-4 w-full bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-left">
+                <div class="flex items-start gap-2.5">
+                  <span class="text-base leading-none mt-0.5">⚠️</span>
+                  <div class="flex-1">
+                    <p id="micErrorText" class="text-xs font-semibold text-amber-900">
+                      Trình duyệt chưa cấp quyền Micro hoặc đang chạy trong khung xem trước hạn chế âm thanh.
+                    </p>
+                    <p class="text-[11px] text-amber-700 mt-1">
+                      Bạn có thể cấp quyền micro trên thanh địa chỉ trình duyệt, hoặc dùng nút bên dưới để tạo nhanh một bản thu âm mẫu kiểm tra tính năng gửi &amp; nghe hộp thoại:
+                    </p>
+                    <button id="btnGenerateDemoVoice" type="button" class="mt-2.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-xs">
+                      ✨ Tạo bản thu mẫu thử nghiệm (5 giây)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trạng thái 2: Đang ghi âm & Đếm ngược 60s -> 00s -->
+            <div id="recorderRecordingState" class="hidden flex-col items-center text-center py-2">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-extrabold mb-3">
+                <span class="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                <span>ĐANG THU ÂM GIỌNG NÓI...</span>
+              </div>
+
+              <!-- Đồng hồ đếm ngược lớn -->
+              <div class="flex items-baseline justify-center gap-1 my-1">
+                <span id="countdownDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 tabular-nums">60</span>
+                <span class="text-sm font-bold text-slate-400">giây còn lại</span>
+              </div>
+
+              <!-- Hiệu ứng sóng âm trực quan -->
+              <div class="flex items-center justify-center gap-1.5 h-10 my-3" aria-hidden="true">
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+                <span class="wave-bar w-1.5 h-8 bg-rose-500 rounded-full"></span>
+              </div>
+
+              <!-- Nút Dừng ghi âm -->
+              <div class="relative flex items-center justify-center mt-1">
+                <span class="record-pulse-ring absolute w-16 h-16 rounded-full bg-rose-400"></span>
+                <button
+                  id="btnStopRecord"
+                  type="button"
+                  class="relative z-10 px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-sm flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                >
+                  <span class="w-3.5 h-3.5 rounded-xs bg-rose-500"></span>
+                  <span>Dừng &amp; Nghe lại</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Trạng thái 3: Nghe lại bản thu vừa ghi & Gửi vào hộp thoại -->
+            <div id="recorderPreviewState" class="hidden flex-col gap-3.5 bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Bản thu nháp (<span id="recordedDurationBadge">00:00</span>)</span>
+                </span>
+                <span class="text-[11px] text-slate-400">Nghe thử trước khi gửi</span>
+              </div>
+
+              <!-- Trình phát audio chuẩn của trình duyệt -->
+              <audio id="previewAudioPlayer" controls class="w-full h-10 rounded-xl"></audio>
+
+              <div class="flex flex-wrap items-center justify-end gap-2.5 pt-1">
+                <button
+                  id="btnRetakeRecord"
+                  type="button"
+                  class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  <span>Ghi lại</span>
+                </button>
+
+                <button
+                  id="btnSendVoiceNote"
+                  type="button"
+                  class="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                  <span>Gửi lời nhắn thoại</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- KHỐI 2: HỘP THOẠI VOICE CỦA BỐ/MẸ VÀ CON (NGÀY HIỆN TẠI) -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
+            <div>
+              <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <span>Hộp thoại giọng nói • Ngày <span id="threadDayTitle">01</span></span>
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Lắng nghe lời nhắn của nhau (được lưu tự động trên thiết bị này)
+              </p>
+            </div>
+            <span id="threadCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">
+              0 lời thoại
+            </span>
+          </div>
+
+          <!-- Danh sách bong bóng thoại voice -->
+          <div id="voiceThreadList" class="mt-4 space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
+            <!-- Render bằng JS -->
+          </div>
+
+          <!-- Ghi chú triển khai đồng bộ 2 điện thoại thực tế -->
+          <details class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 group">
+            <summary class="cursor-pointer font-semibold text-slate-600 hover:text-slate-900 flex items-center justify-between select-none">
+              <span>📡 Hướng dẫn đồng bộ giữa 2 điện thoại (Con &amp; Bố/Mẹ) khi thử nghiệm 30 cặp</span>
+              <span class="text-[11px] text-teal-600 font-bold group-open:hidden">Xem chi tiết</span>
+            </summary>
+            <div class="mt-2.5 bg-slate-50 rounded-2xl p-3.5 space-y-1.5 leading-relaxed text-[11.5px] text-slate-600 border border-slate-200/60">
+              <p>• <strong>Chế độ hiện tại (Offline / Local):</strong> Toàn bộ file ghi âm và tiến độ 30 ngày được lưu bền vững trong <code>IndexedDB</code> của trình duyệt trên máy này để thử nghiệm ngay lập tức không cần cài đặt.</p>
+              <p>• <strong>Khi triển khai cho 30 cặp trên 2 điện thoại khác nhau:</strong> Chỉ cần đưa file HTML này lên <em>Netlify Drop / Vercel</em> (để có HTTPS bật micro) và nối hàm lưu trữ với <strong>Firebase Storage + Firestore</strong> hoặc <strong>Supabase Storage</strong> theo khóa <code>Ma_Cap (VB-01..VB-30) + Ngay_The</code> là con gửi xong bố mẹ mở link sẽ nghe được ngay.</p>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CHẾ ĐỘ 2: XEM TẤT CẢ 30 THẺ (GRID VIEW - IN ẤN / CHỤP ẢNH) -->
+    <section id="gridViewSection" class="hidden">
+      <div class="no-print flex flex-wrap items-center justify-between gap-3 mb-5 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Toàn bộ 30 thẻ gợi mở đối thoại liên thế hệ</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Nhấn vào bất kỳ thẻ nào để mở Phòng thu Voice của ngày đó, hoặc bấm In bộ thẻ.</p>
+        </div>
+        <button id="btnPrintCards" type="button" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs sm:text-sm font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+          </svg>
+          <span>In bộ thẻ / Xuất PDF</span>
+        </button>
+      </div>
+
+      <!-- Lưới chứa các thẻ -->
+      <div id="allCardsContainer" class="print-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+        <!-- Được render bằng JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Thông báo Toast -->
+  <div id="toastNotification" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-300">
+    <div class="bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2">
+      <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+      <span id="toastMessage">Đã lưu lời nhắn thoại!</span>
+    </div>
+  </div>
+
+  <!-- Dữ liệu & Logic tương tác -->
+  <script>
+    // =========================================================================
+    // 1. DỮ LIỆU 30 THẺ GỢI MỞ ĐỐI THOẠI LIÊN THẾ HỆ (BỐ MẸ & CON CÁI)
+    // =========================================================================
+    const CARDS_DATA = [
+      // TUẦN 1: Nhịp sống & Giác quan (Thẻ 01 – 07)
+      {
+        day: 1,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Hôm nay ở chỗ con và bố mẹ thời tiết thế nào? Hãy thu âm một tiếng động xung quanh lúc này.",
+        hint: "Không cần kể chuyện dài — chỉ một chi tiết nhỏ đủ để con và bố mẹ hình dung không gian của nhau."
+      },
+      {
+        day: 2,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Góc học tập hoặc góc làm việc của con/bố mẹ lúc này trông ra sao nếu tả bằng 3 tính từ?",
+        hint: "Hãy nhìn quanh bàn học hoặc nơi làm việc và chọn 3 từ mô tả chân thật nhất ngay lúc này."
+      },
+      {
+        day: 3,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Một mùi hương quen thuộc nào hôm nay gợi cho con/bố mẹ nhớ về nhà hoặc một kỷ niệm cũ?",
+        hint: "Có thể là mùi cơm mới nấu, mùi mưa đầu mùa, mùi sách vở hay mùi nắng trên áo."
+      },
+      {
+        day: 4,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Món ăn ngon nhất hoặc dễ chịu nhất con/bố mẹ được ăn trong 3 ngày qua là gì?",
+        hint: "Chia sẻ hương vị món ăn đó và điều khiến con hoặc bố mẹ thấy ngon miệng."
+      },
+      {
+        day: 5,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Khoảnh khắc nào trong ngày hôm nay khiến cơ thể con/bố mẹ đỡ mỏi nhất?",
+        hint: "Một ngụm nước mát, lúc ngả lưng sau giờ học/giờ làm, hay một cơn gió nhẹ buổi chiều."
+      },
+      {
+        day: 6,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Nếu chọn một màu sắc để mô tả ngày hôm nay của mình, con/bố mẹ chọn màu gì và vì sao?",
+        hint: "Mỗi gam màu đều đại diện cho một nhịp điệu cảm xúc rất riêng của ngày hôm nay."
+      },
+      {
+        day: 7,
+        week: 1,
+        weekTitle: "Tuần 1 • Nhịp sống & Giác quan",
+        question: "Nhìn lại tuần đầu tiên xa nhà/xa con, điều gì ở nhịp sống hiện tại khiến con/bố mẹ thấy lạ nhất?",
+        hint: "Một thói quen mới, giờ giấc sinh hoạt thay đổi hay sự yên tĩnh khác thường trong nhà."
+      },
+
+      // TUẦN 2: Ký ức & Góc nhìn (Thẻ 08 – 15)
+      {
+        day: 8,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Lúc bằng tuổi con bây giờ, điều gì khiến bố/mẹ vui nhất sau một ngày dài? (Con có thể kể điều khiến con vui nhất tuần này).",
+        hint: "Hai thế hệ cùng chia sẻ niềm vui giản dị ở độ tuổi thanh xuân của mình."
+      },
+      {
+        day: 9,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Năm bằng tuổi con bây giờ, điều gì khiến bố/mẹ lo lắng nhất? (Con có thể chia sẻ điều con đang bận tâm).",
+        hint: "Lắng nghe để nhận ra những băn khoăn tuổi trẻ của bố mẹ và con có nhiều điểm tương đồng."
+      },
+      {
+        day: 10,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Một người bạn, thầy cô hoặc người thân từng ảnh hưởng tích cực đến bố/mẹ hoặc con là ai?",
+        hint: "Kể ngắn gọn về một kỷ niệm hoặc lời nói của người đó mà mình vẫn nhớ đến tận bây giờ."
+      },
+      {
+        day: 11,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Khi gặp chuyện khó xử, bố/mẹ và con thường tìm đến ai hoặc tự xoay xở thế nào?",
+        hint: "Không có cách nào đúng hay sai — chỉ là cách mỗi người thường dùng để đi qua lúng túng."
+      },
+      {
+        day: 12,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Một bài hát, bản nhạc hoặc bộ phim gần đây khiến bố/mẹ hoặc con thấy thư giãn hơn?",
+        hint: "Có thể ngân nga một câu hát hoặc giới thiệu tên tác phẩm để đối phương cùng nghe thử."
+      },
+      {
+        day: 13,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Có thói quen nào ở bố/mẹ hoặc ở con mà trước đây chưa hiểu, nhưng giờ thấy quen hoặc dễ thương hơn?",
+        hint: "Sự thấu hiểu đôi khi bắt đầu từ việc nhìn nhận lại những điều nhỏ nhặt hằng ngày."
+      },
+      {
+        day: 14,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Một quyết định từng làm bố/mẹ hoặc con phân vân nhưng cuối cùng lại dạy cho mình nhiều bài học nhất?",
+        hint: "Chia sẻ trải nghiệm thực tế thay vì lời khuyên lý thuyết để hai bên thêm gần gũi."
+      },
+      {
+        day: 15,
+        week: 2,
+        weekTitle: "Tuần 2 • Ký ức & Góc nhìn",
+        question: "Nếu được quay lại một buổi chiều cũ ở nhà, bố/mẹ và con muốn có mặt ai và đang làm gì?",
+        hint: "Gợi lại một khung cảnh gia đình bình yên mà cả hai đều trân trọng."
+      },
+
+      // TUẦN 3: Cảm xúc & Áp lực (Thẻ 16 – 22)
+      {
+        day: 16,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Khoảnh khắc nào trong tuần này khiến con hoặc bố/mẹ thấy hơi mệt mỏi hoặc quá tải nhất?",
+        hint: "Chỉ cần gọi tên sự mệt mỏi ra thành lời — đối phương lắng nghe và không vội phán xét."
+      },
+      {
+        day: 17,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Khi có chuyện buồn hoặc áp lực, dấu hiệu đầu tiên cho thấy con hoặc bố/mẹ đang \"xuống pin\" là gì?",
+        hint: "Ví dụ: ít nói hơn, ngủ muộn, ăn kém ngon hay dễ cáu gắt — nhận biết để hiểu nhau hơn."
+      },
+      {
+        day: 18,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Có điều gì con thường giữ im lặng không kể vì sợ bố/mẹ lo lắng, hoặc bố/mẹ giữ im lặng vì sợ con áp lực không?",
+        hint: "Nói ra một phần nhỏ thôi cũng giúp giảm bớt khoảng cách vô hình giữa hai thế hệ."
+      },
+      {
+        day: 19,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Câu nói nào từ bố/mẹ hoặc từ con khiến đối phương thấy nhẹ lòng nhất khi đang căng thẳng?",
+        hint: "Ghi nhận những lời động viên thật sự chạm tới trái tim của cả hai."
+      },
+      {
+        day: 20,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Nếu được xóa bỏ tạm thời một nỗi lo ngay lúc này, con và bố/mẹ sẽ chọn nỗi lo nào?",
+        hint: "Cho phép bản thân thành thật với điều đang đè nặng lên tâm trí nhất."
+      },
+      {
+        day: 21,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Những lúc nhớ nhà hoặc nhớ con nhiều nhất, con và bố/mẹ thường làm gì để tự trấn an mình?",
+        hint: "Xem lại ảnh cũ, nghe giọng nói của nhau hay tự nhủ một điều gì đó tích cực."
+      },
+      {
+        day: 22,
+        week: 3,
+        weekTitle: "Tuần 3 • Cảm xúc & Áp lực",
+        question: "Hôm nay con hoặc bố/mẹ cần nhất điều gì ở cuộc trò chuyện này: một lời khuyên, một sự lắng nghe hay chỉ là một cái ôm từ xa?",
+        hint: "Nói rõ nhu cầu cảm xúc giúp người kia biết cách đồng hành đúng điều mình cần."
+      },
+
+      // TUẦN 4: Biết ơn & Kỳ vọng (Thẻ 23 – 30)
+      {
+        day: 23,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Một việc nhỏ mà bố/mẹ làm cho con hoặc con làm cho bố/mẹ trong tháng qua khiến mình thấy ấm lòng?",
+        hint: "Có thể là một tin nhắn hỏi thăm đúng lúc, một món đồ gửi lên hay sự kiên nhẫn lắng nghe."
+      },
+      {
+        day: 24,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Một điều nhỏ bé ở bố/mẹ hoặc ở con mà lâu rồi mình chưa nói lời cảm ơn?",
+        hint: "Dành 60 giây này để nói lời cảm ơn trực tiếp qua giọng nói ấm áp của mình."
+      },
+      {
+        day: 25,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Điều gì ở bản thân trong 3 tuần vừa qua khiến con hoặc bố/mẹ thấy tự hào hoặc cố gắng hơn một chút?",
+        hint: "Ghi nhận nỗ lực của chính mình, dù là những bước tiến rất nhỏ mỗi ngày."
+      },
+      {
+        day: 26,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Bố/mẹ và con mong hai chúng ta giữ được thói quen gì sau khi kết thúc thử nghiệm 30 ngày này?",
+        hint: "Thói quen gửi tin nhắn thoại buổi tối, hỏi thăm cảm xúc hay lắng nghe không ngắt lời."
+      },
+      {
+        day: 27,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Có điều gì con muốn nhắn nhủ với bố/mẹ, và bố/mẹ muốn nhắn với con, để hai người trò chuyện thoải mái hơn nữa?",
+        hint: "Góp ý nhẹ nhàng trên tinh thần tôn trọng và yêu thương lẫn nhau."
+      },
+      {
+        day: 28,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Một mục tiêu hoặc điều nhỏ bé con và bố/mẹ đang mong chờ trong tháng tới là gì?",
+        hint: "Cùng hướng tới những dự định gần gũi và tích cực phía trước."
+      },
+      {
+        day: 29,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Lần tới gặp nhau, điều đầu tiên bố/mẹ và con muốn chúng ta cùng làm là gì?",
+        hint: "Một bữa cơm nhà, cùng đi dạo hay ngồi trò chuyện thật lâu không vội vã."
+      },
+      {
+        day: 30,
+        week: 4,
+        weekTitle: "Tuần 4 • Biết ơn & Kỳ vọng",
+        question: "Nếu gửi một lời chúc ngắn gọn cho chính mình và cho nhau ở chặng đường tiếp theo, con và bố/mẹ sẽ nói gì?",
+        hint: "Khép lại hành trình 30 ngày bằng một lời chúc bình an và tiếp tục giữ nhịp cầu nối âm thanh."
+      }
+    ];
+
+    const WEEK_COLORS = {
+      1: "#0f766e",
+      2: "#b45309",
+      3: "#6d28d9",
+      4: "#be123c"
+    };
+
+    // =========================================================================
+    // 2. LƯU TRỮ BỀN VỮNG VỚI INDEXEDDB (LƯU FILE AUDIO BLOB + TIẾN ĐỘ)
+    // =========================================================================
+    const DB_NAME = "VoiceBridge60sDB";
+    const DB_VERSION = 1;
+    const STORE_NOTES = "voiceNotes";
+    let dbInstance = null;
+
+    function initDatabase() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) {
+          resolve(null);
+          return;
+        }
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NOTES)) {
+            const store = db.createObjectStore(STORE_NOTES, { keyPath: "id" });
+            store.createIndex("pairCode", "pairCode", { unique: false });
+          }
+        };
+        request.onsuccess = (event) => {
+          dbInstance = event.target.result;
+          resolve(dbInstance);
+        };
+        request.onerror = () => {
+          resolve(null);
+        };
+      });
+    }
+
+    function saveVoiceNoteToDB(noteObj) {
+      return new Promise((resolve) => {
+        if (!dbInstance) {
+          resolve(false);
+          return;
+        }
+        const tx = dbInstance.transaction(STORE_NOTES, "readwrite");
+        tx.objectStore(STORE_NOTES).put(noteObj);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    }
+
+    function getAllNotesByPairCode(pairCode) {
+      return new Promise((resolve) => {
+        if (!dbInstance) {
+          resolve([]);
+          return;
+        }
+        const tx = dbInstance.transaction(STORE_NOTES, "readonly");
+        const index = tx.objectStore(STORE_NOTES).index("pairCode");
+        const req = index.getAll(pairCode);
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+    }
+
+    function deleteVoiceNoteFromDB(noteId) {
+      return new Promise((resolve) => {
+        if (!dbInstance) {
+          resolve(false);
+          return;
+        }
+        const tx = dbInstance.transaction(STORE_NOTES, "readwrite");
+        tx.objectStore(STORE_NOTES).delete(noteId);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    }
+
+    // =========================================================================
+    // 3. TRẠNG THÁI ỨNG DỤNG & BỘ GHI ÂM MEDIA RECORDER (60 GIÂY)
+    // =========================================================================
+    let currentIndex = 0; // 0 -> 29
+    let currentWeekFilter = "all";
+    let currentViewMode = "single";
+    let currentPairCode = localStorage.getItem("vb_pairCode") || "VB-01";
+    let currentRole = localStorage.getItem("vb_role") || "child"; // "child" | "parent"
+    let pairNotesCache = []; // Danh sách voice note của cặp hiện tại
+    let activeObjectUrls = []; // Quản lý URL blob tránh rò rỉ bộ nhớ
+
+    // Trạng thái ghi âm
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let audioChunks = [];
+    let countdownTimer = null;
+    let remainingSeconds = 60;
+    let recordStartTime = 0;
+    let recordedDurationSec = 0;
+    let draftAudioBlob = null;
+    let draftAudioUrl = null;
+    let isDemoDraft = false;
+
+    // Trạng thái trình phát bong bóng thoại trong hộp thoại
+    let currentlyPlayingId = null;
+    let currentBubbleAudio = null;
+    let toastTimeout = null;
+
+    // Phần tử DOM
+    const pairCodeInput = document.getElementById("pairCodeInput");
+    const pairCodeDisplay = document.getElementById("pairCodeDisplay");
+    const roleBtnChild = document.getElementById("roleBtnChild");
+    const roleBtnParent = document.getElementById("roleBtnParent");
+    const completedDaysCount = document.getElementById("completedDaysCount");
+    const progressBarFill = document.getElementById("progressBarFill");
+
+    const activeCard = document.getElementById("activeCard");
+    const cardDayBadge = document.getElementById("cardDayBadge");
+    const cardStatusPill = document.getElementById("cardStatusPill");
+    const cardWeekLabel = document.getElementById("cardWeekLabel");
+    const cardQuestion = document.getElementById("cardQuestion");
+    const cardHint = document.getElementById("cardHint");
+    const headerLogoIcon = document.getElementById("headerLogoIcon");
+    const daySelectorGrid = document.getElementById("daySelectorGrid");
+    const currentProgressText = document.getElementById("currentProgressText");
+
+    const studioRoleBadge = document.getElementById("studioRoleBadge");
+    const recorderSubHint = document.getElementById("recorderSubHint");
+    const recorderIdleState = document.getElementById("recorderIdleState");
+    const recorderRecordingState = document.getElementById("recorderRecordingState");
+    const recorderPreviewState = document.getElementById("recorderPreviewState");
+    const countdownDisplay = document.getElementById("countdownDisplay");
+    const previewAudioPlayer = document.getElementById("previewAudioPlayer");
+    const recordedDurationBadge = document.getElementById("recordedDurationBadge");
+    const micFallbackBanner = document.getElementById("micFallbackBanner");
+    const micErrorText = document.getElementById("micErrorText");
+
+    const threadDayTitle = document.getElementById("threadDayTitle");
+    const threadCountBadge = document.getElementById("threadCountBadge");
+    const voiceThreadList = document.getElementById("voiceThreadList");
+
+    const singleViewSection = document.getElementById("singleViewSection");
+    const gridViewSection = document.getElementById("gridViewSection");
+    const allCardsContainer = document.getElementById("allCardsContainer");
+    const btnModeSingle = document.getElementById("btnModeSingle");
+    const btnModeGrid = document.getElementById("btnModeGrid");
+
+    function formatDay(num) {
+      return String(num).padStart(2, "0");
+    }
+
+    function formatSeconds(sec) {
+      const s = Math.max(0, Math.round(sec));
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toastNotification");
+      const toastMsg = document.getElementById("toastMessage");
+      toastMsg.textContent = message;
+
+      toast.classList.remove("opacity-0", "translate-y-3");
+      toast.classList.add("opacity-100", "translate-y-0");
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("opacity-100", "translate-y-0");
+        toast.classList.add("opacity-0", "translate-y-3");
+      }, 2600);
+    }
+
+    // Chọn định dạng MIME tương thích cho cả Chrome (Android/Desktop) và Safari (iOS)
+    function getSupportedAudioMimeType() {
+      if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported) {
+        return "";
+      }
+      const candidates = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/aac",
+        "audio/ogg;codecs=opus"
+      ];
+      for (const type of candidates) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          return type;
+        }
+      }
+      return "";
+    }
+
+    // Tạo file WAV âm thanh mẫu (giai điệu ấm áp 4 giây) khi trình duyệt chặn micro
+    function createDemoToneWavBlob() {
+      const sampleRate = 22050;
+      const durationSec = 4;
+      const numSamples = sampleRate * durationSec;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+
+      const writeString = (offset, str) => {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      };
+
+      writeString(0, "RIFF");
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeString(8, "WAVE");
+      writeString(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, "data");
+      view.setUint32(40, numSamples * 2, true);
+
+      // Tạo âm thanh chuông nhẹ nhàng mô phỏng lời nhắn thoại
+      const notes = [392.0, 440.0, 523.25, 659.25]; // G4, A4, C5, E5
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const noteIdx = Math.min(notes.length - 1, Math.floor(t));
+        const freq = notes[noteIdx];
+        const localT = t - noteIdx;
+        const envelope = Math.exp(-2.2 * localT) * Math.min(1, localT * 25);
+        const sample = Math.sin(2 * Math.PI * freq * t) * 0.35 * envelope;
+        view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, sample)) * 0x7fff, true);
+      }
+
+      return new Blob([buffer], { type: "audio/wav" });
+    }
+
+    // =========================================================================
+    // 4. LOGIC GHI ÂM 60 GIÂY & XEM TRƯỚC BẢN THU
+    // =========================================================================
+    function resetRecorderUI() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      if (draftAudioUrl) {
+        URL.revokeObjectURL(draftAudioUrl);
+        draftAudioUrl = null;
+      }
+      draftAudioBlob = null;
+      isDemoDraft = false;
+      remainingSeconds = 60;
+      countdownDisplay.textContent = "60";
+
+      recorderIdleState.classList.remove("hidden");
+      recorderIdleState.classList.add("flex");
+
+      recorderRecordingState.classList.add("hidden");
+      recorderRecordingState.classList.remove("flex");
+
+      recorderPreviewState.classList.add("hidden");
+      recorderPreviewState.classList.remove("flex");
+    }
+
+    async function startVoiceRecording() {
+      // Dừng audio đang phát trong hộp thoại nếu có
+      stopActiveBubbleAudio();
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined") {
+        micErrorText.textContent = "Trình duyệt hoặc môi trường hiện tại không hỗ trợ API ghi âm trực tiếp.";
+        micFallbackBanner.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micFallbackBanner.classList.add("hidden");
+
+        const mimeType = getSupportedAudioMimeType();
+        mediaRecorder = mimeType
+          ? new MediaRecorder(mediaStream, { mimeType })
+          : new MediaRecorder(mediaStream);
+
+        audioChunks = [];
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const finalType = mediaRecorder.mimeType || mimeType || "audio/webm";
+          draftAudioBlob = new Blob(audioChunks, { type: finalType });
+          draftAudioUrl = URL.createObjectURL(draftAudioBlob);
+          isDemoDraft = false;
+
+          recordedDurationSec = Math.max(1, Math.min(60, Math.round((Date.now() - recordStartTime) / 1000)));
+          showDraftPreview();
+        };
+
+        mediaRecorder.start();
+        recordStartTime = Date.now();
+        remainingSeconds = 60;
+        countdownDisplay.textContent = "60";
+
+        // Chuyển giao diện sang Đang ghi âm
+        recorderIdleState.classList.add("hidden");
+        recorderIdleState.classList.remove("flex");
+        recorderRecordingState.classList.remove("hidden");
+        recorderRecordingState.classList.add("flex");
+
+        countdownTimer = setInterval(() => {
+          remainingSeconds -= 1;
+          countdownDisplay.textContent = formatDay(Math.max(0, remainingSeconds));
+          if (remainingSeconds <= 0) {
+            stopVoiceRecording();
+            showToast("Đã hết 60 giây — tự động dừng ghi âm!");
+          }
+        }, 1000);
+      } catch (err) {
+        micErrorText.textContent = "Không thể truy cập Micro (do chưa cấp quyền hoặc khung nhúng chặn micro).";
+        micFallbackBanner.classList.remove("hidden");
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+    }
+
+    function generateDemoDraft() {
+      stopActiveBubbleAudio();
+      draftAudioBlob = createDemoToneWavBlob();
+      draftAudioUrl = URL.createObjectURL(draftAudioBlob);
+      recordedDurationSec = 4;
+      isDemoDraft = true;
+      showDraftPreview();
+    }
+
+    function showDraftPreview() {
+      recorderIdleState.classList.add("hidden");
+      recorderIdleState.classList.remove("flex");
+
+      recorderRecordingState.classList.add("hidden");
+      recorderRecordingState.classList.remove("flex");
+
+      recorderPreviewState.classList.remove("hidden");
+      recorderPreviewState.classList.add("flex");
+
+      previewAudioPlayer.src = draftAudioUrl;
+      recordedDurationBadge.textContent = formatSeconds(recordedDurationSec) + (isDemoDraft ? " • Mẫu thử" : "");
+    }
+
+    async function sendDraftVoiceNote() {
+      if (!draftAudioBlob) return;
+
+      const card = CARDS_DATA[currentIndex];
+      const now = new Date();
+      const timeString = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) +
+        " • " + now.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+
+      const noteObj = {
+        id: `${currentPairCode}_d${card.day}_${Date.now()}`,
+        pairCode: currentPairCode,
+        day: card.day,
+        role: currentRole, // "child" | "parent"
+        durationSec: recordedDurationSec,
+        timestamp: Date.now(),
+        timeLabel: timeString,
+        isDemo: isDemoDraft,
+        audioBlob: draftAudioBlob
+      };
+
+      await saveVoiceNoteToDB(noteObj);
+      pairNotesCache.push(noteObj);
+
+      resetRecorderUI();
+      updateProgressUI();
+      renderDaySelectorGrid();
+      renderSingleCard(false);
+      renderVoiceThreadForCurrentDay();
+
+      const roleName = currentRole === "child" ? "Con" : "Bố / Mẹ";
+      showToast(`Đã gửi lời nhắn thoại của ${roleName} vào Ngày ${formatDay(card.day)}!`);
+    }
+
+    // =========================================================================
+    // 5. HIỂN THỊ HỘP THOẠI BONG BÓNG AUDIO (BỐ/MẸ & CON)
+    // =========================================================================
+    function stopActiveBubbleAudio() {
+      if (currentBubbleAudio) {
+        currentBubbleAudio.pause();
+        currentBubbleAudio = null;
+      }
+      currentlyPlayingId = null;
+    }
+
+    function renderVoiceThreadForCurrentDay() {
+      stopActiveBubbleAudio();
+      activeObjectUrls.forEach(url => URL.revokeObjectURL(url));
+      activeObjectUrls = [];
+
+      const card = CARDS_DATA[currentIndex];
+      threadDayTitle.textContent = formatDay(card.day);
+
+      const dayNotes = pairNotesCache
+        .filter(n => n.day === card.day)
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+      threadCountBadge.textContent = `${dayNotes.length} lời thoại`;
+
+      if (dayNotes.length === 0) {
+        voiceThreadList.innerHTML = `
+          <div class="text-center py-8 px-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60">
+            <div class="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center mx-auto mb-2.5 text-lg shadow-2xs">
+              🎙️
+            </div>
+            <p class="text-xs sm:text-sm font-bold text-slate-700">Chưa có lời nhắn thoại nào cho Ngày ${formatDay(card.day)}</p>
+            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              Hãy bấm nút micro ở trên để ${currentRole === "child" ? "con gửi lời mở đầu cho bố mẹ" : "bố/mẹ gửi lời chia sẻ cho con"} nhé!
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      voiceThreadList.innerHTML = "";
+      dayNotes.forEach((note) => {
+        const isChild = note.role === "child";
+        const audioUrl = URL.createObjectURL(note.audioBlob);
+        activeObjectUrls.push(audioUrl);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = `flex flex-col ${isChild ? "items-end" : "items-start"}`;
+
+        const bubbleColorClass = isChild
+          ? "bg-teal-600 text-white rounded-2xl rounded-tr-xs"
+          : "bg-amber-50 text-slate-800 border border-amber-200/90 rounded-2xl rounded-tl-xs";
+
+        const playBtnClass = isChild
+          ? "bg-white text-teal-700 hover:bg-teal-50"
+          : "bg-amber-600 text-white hover:bg-amber-700";
+
+        const trackBgClass = isChild ? "bg-teal-800/50" : "bg-amber-200/80";
+        const trackFillClass = isChild ? "bg-white" : "bg-amber-600";
+        const subTextClass = isChild ? "text-teal-100" : "text-slate-500";
+
+        wrapper.innerHTML = `
+          <div class="flex items-center gap-1.5 mb-1 px-1">
+            <span class="text-[11px] font-bold ${isChild ? "text-teal-700" : "text-amber-800"}">
+              ${isChild ? "🎒 Con" : "🏡 Bố / Mẹ"}
+            </span>
+            <span class="text-[10px] text-slate-400">• ${note.timeLabel}</span>
+            ${note.isDemo ? '<span class="text-[10px] px-1.5 py-0.2 bg-slate-200 text-slate-600 rounded">Mẫu thử</span>' : ""}
+          </div>
+
+          <div class="max-w-[92%] sm:max-w-[82%] w-full ${bubbleColorClass} p-3.5 shadow-xs">
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                data-play-id="${note.id}"
+                class="bubble-play-btn w-10 h-10 rounded-full ${playBtnClass} flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-xs cursor-pointer"
+                aria-label="Phát lời nhắn thoại"
+              >
+                <svg class="icon-play w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <svg class="icon-pause w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+                </svg>
+              </button>
+
+              <div class="flex-1 min-w-0">
+                <div class="w-full h-2 ${trackBgClass} rounded-full overflow-hidden">
+                  <div class="bubble-progress h-full ${trackFillClass} rounded-full transition-all duration-100" style="width: 0%;"></div>
+                </div>
+                <div class="flex items-center justify-between text-[11px] font-semibold mt-1.5 ${subTextClass}">
+                  <span class="bubble-time-current">00:00</span>
+                  <span>${formatSeconds(note.durationSec)}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                data-delete-id="${note.id}"
+                class="bubble-delete-btn p-1.5 rounded-lg opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                title="Xóa lời thoại này"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const playBtn = wrapper.querySelector(".bubble-play-btn");
+        const iconPlay = wrapper.querySelector(".icon-play");
+        const iconPause = wrapper.querySelector(".icon-pause");
+        const progressEl = wrapper.querySelector(".bubble-progress");
+        const timeCurrentEl = wrapper.querySelector(".bubble-time-current");
+        const deleteBtn = wrapper.querySelector(".bubble-delete-btn");
+
+        playBtn.addEventListener("click", () => {
+          // Nếu đang phát chính bong bóng này -> Tạm dừng
+          if (currentlyPlayingId === note.id && currentBubbleAudio) {
+            currentBubbleAudio.pause();
+            iconPlay.classList.remove("hidden");
+            iconPause.classList.add("hidden");
+            currentlyPlayingId = null;
+            return;
+          }
+
+          // Dừng bong bóng khác nếu đang phát
+          stopActiveBubbleAudio();
+          document.querySelectorAll(".bubble-play-btn").forEach(btn => {
+            btn.querySelector(".icon-play").classList.remove("hidden");
+            btn.querySelector(".icon-pause").classList.add("hidden");
+          });
+
+          const audio = new Audio(audioUrl);
+          currentBubbleAudio = audio;
+          currentlyPlayingId = note.id;
+          iconPlay.classList.add("hidden");
+          iconPause.classList.remove("hidden");
+
+          audio.addEventListener("timeupdate", () => {
+            const dur = isFinite(audio.duration) && audio.duration > 0 ? audio.duration : note.durationSec;
+            const pct = Math.min(100, (audio.currentTime / dur) * 100);
+            progressEl.style.width = `${pct}%`;
+            timeCurrentEl.textContent = formatSeconds(audio.currentTime);
+          });
+
+          audio.addEventListener("ended", () => {
+            iconPlay.classList.remove("hidden");
+            iconPause.classList.add("hidden");
+            progressEl.style.width = "0%";
+            timeCurrentEl.textContent = "00:00";
+            currentlyPlayingId = null;
+            currentBubbleAudio = null;
+          });
+
+          audio.play().catch(() => {
+            showToast("Không thể phát âm thanh này trên trình duyệt.");
+          });
+        });
+
+        deleteBtn.addEventListener("click", async () => {
+          stopActiveBubbleAudio();
+          await deleteVoiceNoteFromDB(note.id);
+          pairNotesCache = pairNotesCache.filter(item => item.id !== note.id);
+          updateProgressUI();
+          renderDaySelectorGrid();
+          renderSingleCard(false);
+          renderVoiceThreadForCurrentDay();
+          showToast("Đã xóa lời nhắn thoại.");
+        });
+
+        voiceThreadList.appendChild(wrapper);
+      });
+
+      // Cuộn xuống lời thoại mới nhất
+      voiceThreadList.scrollTop = voiceThreadList.scrollHeight;
+    }
+
+    // =========================================================================
+    // 6. CẬP NHẬT GIAO DIỆN THẺ, TIẾN ĐỘ & VAI TRÒ
+    // =========================================================================
+    function updateRoleUI() {
+      localStorage.setItem("vb_role", currentRole);
+
+      if (currentRole === "child") {
+        roleBtnChild.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-teal-600 text-white shadow-xs flex items-center gap-1.5";
+        roleBtnParent.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+
+        studioRoleBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-teal-50 text-teal-700 border border-teal-200";
+        studioRoleBadge.textContent = "🎒 Đang nói với vai trò: CON";
+        recorderSubHint.textContent = "Nhìn câu hỏi gợi ý bên cạnh và chia sẻ suy nghĩ của con bằng giọng nói tự nhiên nhất.";
+      } else {
+        roleBtnParent.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-600 text-white shadow-xs flex items-center gap-1.5";
+        roleBtnChild.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+
+        studioRoleBadge.className = "px-3 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200";
+        studioRoleBadge.textContent = "🏡 Đang nói với vai trò: BỐ / MẸ";
+        recorderSubHint.textContent = "Lắng nghe không phán xét và chia sẻ góc nhìn ấm áp của bố/mẹ qua tin nhắn thoại 60 giây.";
+      }
+    }
+
+    function updateProgressUI() {
+      const uniqueDaysCompleted = new Set(pairNotesCache.map(n => n.day));
+      const count = uniqueDaysCompleted.size;
+      const pct = Math.round((count / 30) * 100);
+
+      pairCodeDisplay.textContent = currentPairCode;
+      completedDaysCount.textContent = `${count}/30 ngày`;
+      progressBarFill.style.width = `${pct}%`;
+    }
+
+    function renderSingleCard(animate = true) {
+      const card = CARDS_DATA[currentIndex];
+      const weekClass = `theme-week-${card.week}`;
+
+      activeCard.className = `voice-card ${weekClass} w-full bg-white rounded-[26px] p-6 sm:p-7 flex flex-col justify-between shadow-xl shadow-slate-200/80 border border-slate-100`;
+      headerLogoIcon.style.backgroundColor = WEEK_COLORS[card.week];
+
+      if (animate) {
+        activeCard.classList.remove("card-animate");
+        void activeCard.offsetWidth;
+        activeCard.classList.add("card-animate");
+      }
+
+      // Kiểm tra trạng thái tương tác của ngày hiện tại
+      const dayNotes = pairNotesCache.filter(n => n.day === card.day);
+      const hasChild = dayNotes.some(n => n.role === "child");
+      const hasParent = dayNotes.some(n => n.role === "parent");
+
+      if (hasChild && hasParent) {
+        cardStatusPill.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
+        cardStatusPill.textContent = "✓ Hai chiều hoàn tất";
+      } else if (dayNotes.length > 0) {
+        cardStatusPill.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+        cardStatusPill.textContent = hasChild ? "Con đã nói • Chờ Bố/Mẹ" : "Bố/Mẹ đã nói • Chờ Con";
+      } else {
+        cardStatusPill.className = "text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500";
+        cardStatusPill.textContent = "Chưa có lời thoại";
+      }
+
+      cardDayBadge.textContent = `NGÀY ${formatDay(card.day)} / 30`;
+      cardWeekLabel.textContent = card.weekTitle;
+      cardQuestion.textContent = card.question;
+      cardHint.textContent = card.hint;
+      currentProgressText.textContent = `Thẻ ${card.day} / 30`;
+
+      renderDaySelectorGrid();
+    }
+
+    function renderDaySelectorGrid() {
+      daySelectorGrid.innerHTML = "";
+      const completedDays = new Set(pairNotesCache.map(n => n.day));
+
+      CARDS_DATA.forEach((card, idx) => {
+        const isSelected = idx === currentIndex;
+        const isFilteredOut = currentWeekFilter !== "all" && String(card.week) !== currentWeekFilter;
+        const isDone = completedDays.has(card.day);
+        const accentColor = WEEK_COLORS[card.week];
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.title = `Ngày ${formatDay(card.day)}: ${card.question}`;
+
+        let baseClasses = "relative py-2 rounded-xl text-xs font-bold transition-all border ";
+        if (isSelected) {
+          baseClasses += "text-white shadow-sm scale-105";
+          btn.style.backgroundColor = accentColor;
+          btn.style.borderColor = accentColor;
+        } else if (isFilteredOut) {
+          baseClasses += "bg-slate-50 text-slate-300 border-slate-100 opacity-50 hover:opacity-90";
+        } else if (isDone) {
+          baseClasses += "bg-emerald-50/70 text-emerald-900 border-emerald-200 hover:bg-emerald-100/70";
+        } else {
+          baseClasses += "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
+        }
+
+        btn.className = baseClasses;
+        btn.innerHTML = `
+          <span>${formatDay(card.day)}</span>
+          ${isDone && !isSelected ? '<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500"></span>' : ""}
+        `;
+
+        btn.addEventListener("click", () => {
+          resetRecorderUI();
+          currentIndex = idx;
+          renderSingleCard(true);
+          renderVoiceThreadForCurrentDay();
+        });
+
+        daySelectorGrid.appendChild(btn);
+      });
+    }
+
+    function renderAllCardsGrid() {
+      allCardsContainer.innerHTML = "";
+      const completedDays = new Set(pairNotesCache.map(n => n.day));
+
+      const filteredCards = currentWeekFilter === "all"
+        ? CARDS_DATA
+        : CARDS_DATA.filter(c => String(c.week) === currentWeekFilter);
+
+      filteredCards.forEach((card) => {
+        const weekClass = `theme-week-${card.week}`;
+        const isDone = completedDays.has(card.day);
+        const article = document.createElement("article");
+        article.className = `voice-card ${weekClass} w-full max-w-[360px] bg-white rounded-[24px] p-6 flex flex-col justify-between shadow-md border border-slate-100 cursor-pointer hover:-translate-y-1 transition-all`;
+
+        article.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="badge-accent text-xs font-extrabold tracking-wide px-3 py-1 rounded-full">
+                NGÀY ${formatDay(card.day)} / 30
+              </span>
+              <span class="text-[11px] font-bold ${isDone ? "text-emerald-600" : "text-slate-400"}">
+                ${isDone ? "✓ Đã có voice" : "Bấm để thu âm"}
+              </span>
+            </div>
+            <div class="mt-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              ${card.weekTitle}
+            </div>
+          </div>
+
+          <div class="my-auto py-3">
+            <p class="text-base sm:text-[18px] leading-[1.45] font-bold text-slate-800">
+              ${card.question}
+            </p>
+            <p class="mt-3 text-xs leading-relaxed text-slate-500">
+              ${card.hint}
+            </p>
+          </div>
+
+          <div class="border-t border-dashed border-slate-200 pt-3 text-[11px] leading-relaxed text-slate-500">
+            <strong class="text-accent font-bold">Quy tắc 60s:</strong> Bấm mic nói tự nhiên tối đa 60 giây • Lắng nghe không phán xét • Bố mẹ và con cùng trả lời.
+          </div>
+        `;
+
+        article.addEventListener("click", () => {
+          currentIndex = card.day - 1;
+          switchViewMode("single");
+          resetRecorderUI();
+          renderSingleCard(true);
+          renderVoiceThreadForCurrentDay();
+        });
+
+        allCardsContainer.appendChild(article);
+      });
+    }
+
+    function navigateCard(direction) {
+      const candidateIndices = CARDS_DATA
+        .map((c, idx) => ({ c, idx }))
+        .filter(item => currentWeekFilter === "all" || String(item.c.week) === currentWeekFilter)
+        .map(item => item.idx);
+
+      if (candidateIndices.length === 0) return;
+
+      resetRecorderUI();
+      const posInFiltered = candidateIndices.indexOf(currentIndex);
+      if (posInFiltered === -1) {
+        currentIndex = candidateIndices[0];
+      } else {
+        const nextPos = (posInFiltered + direction + candidateIndices.length) % candidateIndices.length;
+        currentIndex = candidateIndices[nextPos];
+      }
+      renderSingleCard(true);
+      renderVoiceThreadForCurrentDay();
+    }
+
+    function setWeekFilter(weekVal) {
+      currentWeekFilter = weekVal;
+
+      document.querySelectorAll(".week-filter-btn").forEach(btn => {
+        const btnWeek = btn.getAttribute("data-week-filter");
+        if (btnWeek === weekVal) {
+          btn.classList.remove("bg-white", "text-slate-700", "border-slate-200");
+          btn.classList.add("bg-slate-900", "text-white", "border-slate-900", "shadow-sm");
+        } else {
+          btn.classList.remove("bg-slate-900", "text-white", "border-slate-900", "shadow-sm");
+          btn.classList.add("bg-white", "text-slate-700", "border-slate-200");
+        }
+      });
+
+      if (weekVal !== "all" && String(CARDS_DATA[currentIndex].week) !== weekVal) {
+        const firstIdx = CARDS_DATA.findIndex(c => String(c.week) === weekVal);
+        if (firstIdx !== -1) {
+          resetRecorderUI();
+          currentIndex = firstIdx;
+        }
+      }
+
+      renderSingleCard(true);
+      renderVoiceThreadForCurrentDay();
+      if (currentViewMode === "grid") {
+        renderAllCardsGrid();
+      }
+    }
+
+    function switchViewMode(mode) {
+      currentViewMode = mode;
+      if (mode === "single") {
+        singleViewSection.classList.remove("hidden");
+        gridViewSection.classList.add("hidden");
+
+        btnModeSingle.classList.add("bg-white", "text-slate-900", "shadow-sm");
+        btnModeSingle.classList.remove("text-slate-600");
+
+        btnModeGrid.classList.remove("bg-white", "text-slate-900", "shadow-sm");
+        btnModeGrid.classList.add("text-slate-600");
+      } else {
+        singleViewSection.classList.add("hidden");
+        gridViewSection.classList.remove("hidden");
+
+        btnModeGrid.classList.add("bg-white", "text-slate-900", "shadow-sm");
+        btnModeGrid.classList.remove("text-slate-600");
+
+        btnModeSingle.classList.remove("bg-white", "text-slate-900", "shadow-sm");
+        btnModeSingle.classList.add("text-slate-600");
+
+        renderAllCardsGrid();
+      }
+    }
+
+    async function loadPairDataAndRefresh() {
+      pairNotesCache = await getAllNotesByPairCode(currentPairCode);
+      updateProgressUI();
+      renderSingleCard(false);
+      renderVoiceThreadForCurrentDay();
+      if (currentViewMode === "grid") {
+        renderAllCardsGrid();
+      }
+    }
+
+    // =========================================================================
+    // 7. GẮN SỰ KIỆN & KHỞI CHẠY ỨNG DỤNG
+    // =========================================================================
+    document.getElementById("btnPrev").addEventListener("click", () => navigateCard(-1));
+    document.getElementById("btnNext").addEventListener("click", () => navigateCard(1));
+
+    roleBtnChild.addEventListener("click", () => {
+      currentRole = "child";
+      updateRoleUI();
+    });
+
+    roleBtnParent.addEventListener("click", () => {
+      currentRole = "parent";
+      updateRoleUI();
+    });
+
+    pairCodeInput.addEventListener("change", async (e) => {
+      const cleaned = e.target.value.trim().toUpperCase() || "VB-01";
+      e.target.value = cleaned;
+      currentPairCode = cleaned;
+      localStorage.setItem("vb_pairCode", currentPairCode);
+      resetRecorderUI();
+      await loadPairDataAndRefresh();
+      showToast(`Đã chuyển sang dữ liệu của cặp ${currentPairCode}`);
+    });
+
+    document.getElementById("btnStartRecord").addEventListener("click", startVoiceRecording);
+    document.getElementById("btnStopRecord").addEventListener("click", stopVoiceRecording);
+    document.getElementById("btnRetakeRecord").addEventListener("click", resetRecorderUI);
+    document.getElementById("btnSendVoiceNote").addEventListener("click", sendDraftVoiceNote);
+    document.getElementById("btnGenerateDemoVoice").addEventListener("click", generateDemoDraft);
+
+    btnModeSingle.addEventListener("click", () => switchViewMode("single"));
+    btnModeGrid.addEventListener("click", () => switchViewMode("grid"));
+    document.getElementById("btnPrintCards").addEventListener("click", () => window.print());
+
+    document.querySelectorAll(".week-filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setWeekFilter(btn.getAttribute("data-week-filter"));
+      });
+    });
+
+    // Điều hướng phím mũi tên (tránh kích hoạt khi đang gõ Mã cặp)
+    document.addEventListener("keydown", (e) => {
+      if (document.activeElement === pairCodeInput) return;
+      if (currentViewMode !== "single") return;
+      if (e.key === "ArrowLeft") navigateCard(-1);
+      if (e.key === "ArrowRight") navigateCard(1);
+    });
+
+    // Thao tác vuốt trên thẻ
+    const swipeArea = document.getElementById("swipeArea");
+    let touchStartX = 0;
+    swipeArea.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    swipeArea.addEventListener("touchend", (e) => {
+      const deltaX = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(deltaX) > 45) {
+        navigateCard(deltaX < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+
+    // Khởi tạo ứng dụng
+    (async function bootstrapApp() {
+      pairCodeInput.value = currentPairCode;
+      updateRoleUI();
+      await initDatabase();
+      await loadPairDataAndRefresh();
+    })();
+  </script>
+</body>
+</html>
