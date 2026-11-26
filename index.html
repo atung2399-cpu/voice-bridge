@@ -853,6 +853,25 @@ const sbClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
+
+    async function ensureSupabaseLogin() {
+  const { data, error } = await sbClient.auth.getSession();
+
+  if (error) throw error;
+  if (data.session) return;
+
+  const email = prompt("Nhập email Supabase:");
+  const password = prompt("Nhập mật khẩu Supabase:");
+
+  if (!email || !password) {
+    throw new Error("Bạn chưa nhập thông tin đăng nhập.");
+  }
+
+  const { error: loginError } =
+    await sbClient.auth.signInWithPassword({ email, password });
+
+  if (loginError) throw loginError;
+}
     let currentIndex = 0; // 0 -> 29
     let currentWeekFilter = "all";
     let currentViewMode = "single";
@@ -1281,7 +1300,7 @@ const sbClient = window.supabase.createClient(
         const iconPlay = wrapper.querySelector(".icon-play");
         const iconPause = wrapper.querySelector(".icon-pause");
         const progressEl = wrapper.querySelector(".bubble-progress");
-        const timeCurrentEl = wrapper.querySelector(".bubble-time-current");
+        const timeCurrentEl = wrapper.querySelector(".bubble-time-current")
         const deleteBtn = wrapper.querySelector(".bubble-delete-btn");
 
         playBtn.addEventListener("click", () => {
