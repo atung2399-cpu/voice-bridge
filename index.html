@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -844,6 +845,14 @@
     // =========================================================================
     // 3. TRẠNG THÁI ỨNG DỤNG & BỘ GHI ÂM MEDIA RECORDER (60 GIÂY)
     // =========================================================================
+    // Kết nối Supabase
+const SUPABASE_URL = "https://osnfrksbnvnavadzvszx.supabase.co/rest/v1/";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0mmlJZBuJFk1DmrHPW8p7w_Y30PYmRD";
+
+const sbClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
     let currentIndex = 0; // 0 -> 29
     let currentWeekFilter = "all";
     let currentViewMode = "single";
@@ -851,7 +860,6 @@
     let currentRole = localStorage.getItem("vb_role") || "child"; // "child" | "parent"
     let pairNotesCache = []; // Danh sách voice note của cặp hiện tại
     let activeObjectUrls = []; // Quản lý URL blob tránh rò rỉ bộ nhớ
-
     // Trạng thái ghi âm
     let mediaRecorder = null;
     let mediaStream = null;
