@@ -1153,6 +1153,58 @@ const sbClient = window.supabase.createClient(
       recordedDurationBadge.textContent = formatSeconds(recordedDurationSec) + (isDemoDraft ? " • Mẫu thử" : "");
     }
 
+   
+async function uploadVoiceNoteToSupabase(noteObj) {
+  const { data: userData, error: userError } =
+    await sbClient.auth.getUser();
+
+  if (userError) throw userError;
+  if (!userData.user) throw new Error("Chưa đăng nhập Supabase.");
+
+  const userId = userData.user.id;
+  const blob = noteObj.audioBlob;
+
+  const extension = blob.type.includes("wav")
+    ? "wav"
+    : blob.type.includes("mp4")
+    ? "m4a"
+    : "webm";
+
+  const storagePath =
+    `${userId}/${noteObj.pairCode}/${noteObj.id}.${extension}`;
+
+  const { error: uploadError } = await sbClient.storage
+    .from("recordings")
+    .upload(storagePath, blob, {
+      contentType: blob.type || "audio/webm",
+      upsert: false
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { error: insertError } = await sbClient
+    .from("voice_notes")
+    .insert({
+      id: noteObj.id,
+      user_id: userId,
+      pair_code: noteObj.pairCode,
+      day: noteObj.day,
+      role: noteObj.role,
+      duration_sec: noteObj.durationSec,
+      recorded_at_ms: noteObj.timestamp,
+      time_label: noteObj.timeLabel,
+      is_demo: noteObj.isDemo,
+      storage_path: storagePath
+    });
+
+  if (insertError) {
+    await sbClient.storage.from("recordings").remove([storagePath]);
+    throw insertError;
+  }
+
+  return true;
+}
+
     async function sendDraftVoiceNote() {
       if (!draftAudioBlob) return;
 
@@ -1173,7 +1225,7 @@ const sbClient = window.supabase.createClient(
         audioBlob: draftAudioBlob
       };
 
-      await saveVoiceNoteToDB(noteObj);
+      await uploadVoiceNoteToSupabase(noteObj);
       pairNotesCache.push(noteObj);
 
       resetRecorderUI();
@@ -1229,8 +1281,10 @@ const sbClient = window.supabase.createClient(
       voiceThreadList.innerHTML = "";
       dayNotes.forEach((note) => {
         const isChild = note.role === "child";
-        const audioUrl = URL.createObjectURL(note.audioBlob);
-        activeObjectUrls.push(audioUrl);
+        const audioUrl = note.audioUrl || (
+  note.audioBlob ? URL.createObjectURL(note.audioBlob) : ""
+);
+        if (note.audioBlob) activeObjectUrls.push(audioUrl);
 
         const wrapper = document.createElement("div");
         wrapper.className = `flex flex-col ${isChild ? "items-end" : "items-start"}`;
@@ -1610,14 +1664,45 @@ const sbClient = window.supabase.createClient(
     }
 
     async function loadPairDataAndRefresh() {
-      pairNotesCache = await getAllNotesByPairCode(currentPairCode);
-      updateProgressUI();
-      renderSingleCard(false);
-      renderVoiceThreadForCurrentDay();
-      if (currentViewMode === "grid") {
-        renderAllCardsGrid();
-      }
-    }
+  const { data, error } = await sbClient
+    .from("voice_notes")
+    .select("*")
+    .eq("pair_code", currentPairCode)
+    .order("recorded_at_ms", { ascending: true });
+
+  if (error) throw error;
+
+  pairNotesCache = await Promise.all(
+    (data || []).map(async (row) => {
+      const { data: signed, error: urlError } =
+        await sbClient.storage
+          .from("recordings")
+          .createSignedUrl(row.storage_path, 3600);
+
+      if (urlError) throw urlError;
+
+      return {
+        id: row.id,
+        pairCode: row.pair_code,
+        day: row.day,
+        role: row.role,
+        durationSec: row.duration_sec,
+        timestamp: Number(row.recorded_at_ms),
+        timeLabel: row.time_label,
+        isDemo: row.is_demo,
+        audioUrl: signed.signedUrl
+      };
+    })
+  );
+
+  updateProgressUI();
+  renderSingleCard(false);
+  renderVoiceThreadForCurrentDay();
+
+  if (currentViewMode === "grid") {
+    renderAllCardsGrid();
+  }
+}
 
     // =========================================================================
     // 7. GẮN SỰ KIỆN & KHỞI CHẠY ỨNG DỤNG
