@@ -1684,12 +1684,17 @@ const sbClient = window.supabase.createClient(
     }, { passive: true });
 
     // Khởi tạo ứng dụng
-    (async function bootstrapApp() {
-      pairCodeInput.value = currentPairCode;
-      updateRoleUI();
-      await initDatabase();
-      await loadPairDataAndRefresh();
-    })();
+   (async function bootstrapApp() {
+  pairCodeInput.value = currentPairCode;
+  updateRoleUI();
+
+  try {
+    await ensureSupabaseLogin();
+    await loadPairDataAndRefresh();
+  } catch (error) {
+    alert("Lỗi đăng nhập hoặc tải dữ liệu: " + error.message);
+  }
+})();
   </script>
 </body>
 </html>
